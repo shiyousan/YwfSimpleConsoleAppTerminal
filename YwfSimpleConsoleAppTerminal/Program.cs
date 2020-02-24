@@ -20,7 +20,6 @@ namespace YwfSimpleConsoleAppTerminal
                 ConsoleHelper.WriteLineByColor(ex.Message, ConsoleColor.Red);
                 ConsoleHelper.WriteLineByColor(ex.StackTrace, ConsoleColor.Yellow);
             }
-            Console.ReadKey();
         }
 
         /// <summary>

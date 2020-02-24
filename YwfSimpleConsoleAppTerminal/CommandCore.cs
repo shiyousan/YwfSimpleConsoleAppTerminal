@@ -17,7 +17,7 @@ namespace YwfSimpleConsoleAppTerminal
         /// <summary>
         /// 任务操作类地图字典
         /// </summary>
-        private IDictionary<int, Type> JobTypeMap { get; set; }
+        private IDictionary<string, Type> JobTypeMap { get; set; }
 
         /// <summary>
         /// 命令信息
@@ -35,7 +35,6 @@ namespace YwfSimpleConsoleAppTerminal
         /// <param name="input"></param>
         public void ExecuteCommand(string input)
         {
-            int command;
             if (input == "exit")
             {
                 IsRun = false;
@@ -44,14 +43,9 @@ namespace YwfSimpleConsoleAppTerminal
             {
                 ShowCommand();
             }
-            else if (int.TryParse(input, out command))
-            {
-                if (!JobTypeMap.ContainsKey(command))
-                {
-                    PrintErrorCommandMessage();
-                    return;
-                }
-                Type typeInfo = JobTypeMap[command];
+            else if (JobTypeMap.ContainsKey(input))
+            {                
+                Type typeInfo = JobTypeMap[input];
                 var instance = Assembly.GetAssembly(typeInfo).CreateInstance(typeInfo.FullName);
 
                 ConsoleHelper.WriteLineByColor(string.Format("Starting in {0},{1}", DateTime.Now, typeInfo.Name), ConsoleColor.Green);
@@ -82,7 +76,7 @@ namespace YwfSimpleConsoleAppTerminal
 
             Console.ForegroundColor = ConsoleColor.Green;
             ConsoleHelper.DrawHalfSplitLine();
-            Console.WriteLine("操作命令说明：\n");
+            Console.WriteLine("操作命令说明(输入命令名称以执行任务)：\n");
             Console.WriteLine($"序号\t|\t命令名称\t|\t描述\t");
             ConsoleHelper.DrawHalfSplitLine();
             foreach (var c in CommandList)
@@ -112,22 +106,21 @@ namespace YwfSimpleConsoleAppTerminal
             IList<string> _commandList = new List<string>();
 
             int counter = 1;
-            IDictionary<int, Type> _typeMap = new Dictionary<int, Type>();
+            IDictionary<string, Type> _typeMap = new Dictionary<string, Type>();
             foreach (var type in jobTypeList)
             {
-                _typeMap.Add(counter, type);
-                //获取操作类说明
-                string counterString = $"[{counter}]";
                 JobAttribute jobAttribute = type.GetCustomAttribute<JobAttribute>(false);
+                _typeMap.Add(jobAttribute.CommandName, type);
+                //获取操作类说明
+                string counterString = $"[{counter}]";                
                 //添加操作命令说明列表
-                //var commandDescription = string.Format("{0} {1} {2} ", counterString, type.Name.PadRight(25), jobAttribute.Description);
                 var commandDescription = $"[{counter}]\t|\t{jobAttribute.CommandName.PadRight(16)}|\t{jobAttribute.Description}";
                 _commandList.Add(commandDescription);
                 counter++;
-            }
-            string tempCommand = string.Format("{0} 打印操作指令", "[help]".PadRight(8));
+            }            
+            string tempCommand = "\t|\thelp\t\t|\t打印操作指令";
             _commandList.Add(tempCommand);
-            tempCommand = string.Format("{0} 退出", "[exit]".PadRight(8));
+            tempCommand = "\t|\texit\t\t|\t退出终端循环";
             _commandList.Add(tempCommand);
 
             this.JobTypeMap = _typeMap;

@@ -48,6 +48,7 @@
     <Compile Include="ConsoleHelper.cs" />
     <Compile Include="IBaseJob.cs" />
     <Compile Include="JobAttribute.cs" />
+    <Compile Include="Job\HelloJob.cs" />
     <Compile Include="Job\TestJob.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
