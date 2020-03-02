@@ -15,7 +15,6 @@ namespace YwfSimpleConsoleAppTerminal
                 ConsoleHelper.WriteLineByColor("Ywf简单控制台应用程序终端工具-shiyousan.com",ConsoleColor.Green);
                 CommandCore command = new CommandCore();
                 command.Run();
-                //Run();
             }
             catch (Exception ex)
             {
