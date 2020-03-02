@@ -24,9 +24,32 @@ namespace YwfSimpleConsoleAppTerminal
         /// </summary>
         private IList<string> CommandList { get; set; }
 
+
         public CommandCore()
         {
             InitializeProperty();
+        }
+
+        /// <summary>
+        /// 运行入口,接收输入命令
+        /// </summary>
+        public void Run()
+        {
+            ShowCommand();
+            while (IsRun)
+            {
+                try
+                {
+                    Console.WriteLine();
+                    Console.Write("console> ");
+                    var consoleInput = Console.ReadLine();
+                    ExecuteCommand(consoleInput);
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
         }
 
         /// <summary>
@@ -44,17 +67,17 @@ namespace YwfSimpleConsoleAppTerminal
                 ShowCommand();
             }
             else if (JobTypeMap.ContainsKey(input))
-            {                
+            {
                 Type typeInfo = JobTypeMap[input];
                 var instance = Assembly.GetAssembly(typeInfo).CreateInstance(typeInfo.FullName);
 
-                ConsoleHelper.WriteLineByColor(string.Format("Starting in {0},{1}", DateTime.Now, typeInfo.Name), ConsoleColor.Green);
+                ConsoleHelper.WriteLineByColor($"Starting in {DateTime.Now},command by [{input}]", ConsoleColor.DarkGray);
                 typeInfo.InvokeMember("Execute"
                     , BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Instance
                     , null
                     , instance
                     , null);
-                ConsoleHelper.WriteLineByColor(string.Format("Ending in {0},{1}", DateTime.Now, typeInfo.Name), ConsoleColor.Green);
+                ConsoleHelper.WriteLineByColor($"Ending in {DateTime.Now},command by [{input}]", ConsoleColor.DarkGray);
             }
             else
             {
@@ -76,7 +99,7 @@ namespace YwfSimpleConsoleAppTerminal
 
             Console.ForegroundColor = ConsoleColor.Green;
             ConsoleHelper.DrawHalfSplitLine();
-            Console.WriteLine("操作命令说明(输入命令名称以执行任务)：\n");
+            Console.WriteLine("操作命令说明(输入命令名称以执行任务，区分大小写)：\n");
             Console.WriteLine($"序号\t|\t命令名称\t|\t描述\t");
             ConsoleHelper.DrawHalfSplitLine();
             foreach (var c in CommandList)
@@ -112,12 +135,12 @@ namespace YwfSimpleConsoleAppTerminal
                 JobAttribute jobAttribute = type.GetCustomAttribute<JobAttribute>(false);
                 _typeMap.Add(jobAttribute.CommandName, type);
                 //获取操作类说明
-                string counterString = $"[{counter}]";                
+                string counterString = $"[{counter}]";
                 //添加操作命令说明列表
                 var commandDescription = $"[{counter}]\t|\t{jobAttribute.CommandName.PadRight(16)}|\t{jobAttribute.Description}";
                 _commandList.Add(commandDescription);
                 counter++;
-            }            
+            }
             string tempCommand = "\t|\thelp\t\t|\t打印操作指令";
             _commandList.Add(tempCommand);
             tempCommand = "\t|\texit\t\t|\t退出终端循环";
@@ -144,7 +167,7 @@ namespace YwfSimpleConsoleAppTerminal
             //获取只包含IBaseJob接口，并且有声明JobAttribute特性的类             
             foreach (var type in tempTypeList)
             {
-                bool hasInterface = new List<Type>(type.GetInterfaces()).Contains(typeof(IBaseJob));                                
+                bool hasInterface = new List<Type>(type.GetInterfaces()).Contains(typeof(IBaseJob));
                 bool hasAttribute = type.IsDefined(typeof(JobAttribute), false);
 
                 if (hasInterface && hasAttribute)
