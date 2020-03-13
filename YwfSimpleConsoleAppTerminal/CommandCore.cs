@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConsoleTables;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace YwfSimpleConsoleAppTerminal
         /// <summary>
         /// 命令信息
         /// </summary>
-        private IList<string> CommandList { get; set; }
+        private IDictionary<string, string> CommandInfoList { get; set; }
 
 
         public CommandCore()
@@ -91,7 +92,7 @@ namespace YwfSimpleConsoleAppTerminal
         public void ShowCommand()
         {
 
-            if (CommandList == null || CommandList.Count() <= 0)
+            if (JobTypeMap == null || JobTypeMap.Count() <= 0)
             {
                 ConsoleHelper.WriteLineByColor("没有可执行的命令！！！", ConsoleColor.Red);
                 return;
@@ -100,12 +101,20 @@ namespace YwfSimpleConsoleAppTerminal
             Console.ForegroundColor = ConsoleColor.Green;
             ConsoleHelper.DrawHalfSplitLine();
             Console.WriteLine("操作命令说明(输入命令名称以执行任务，区分大小写)：\n");
-            Console.WriteLine($"序号\t|\t命令名称\t|\t描述\t");
-            ConsoleHelper.DrawHalfSplitLine();
-            foreach (var c in CommandList)
+
+            /*
+             * 使用ConsoleTable类库绘制表格
+             * https://github.com/khalidabuhakmeh/ConsoleTables
+             */
+            ConsoleTable table = new ConsoleTable("No.", "CommandName", "Description");
+            int counter = 0;
+            foreach (var c in CommandInfoList)
             {
-                Console.WriteLine(c);
+                table.AddRow(counter, c.Key, c.Value);
+                counter++;
             }
+            table.Write();
+
             ConsoleHelper.DrawHalfSplitLine();
             Console.ResetColor();
         }
@@ -126,28 +135,20 @@ namespace YwfSimpleConsoleAppTerminal
         private void InitializeProperty()
         {
             IList<Type> jobTypeList = GetJobTypeList();
-            IList<string> _commandList = new List<string>();
+            IDictionary<string, string> _commandInfoList = new Dictionary<string, string>();
 
-            int counter = 1;
             IDictionary<string, Type> _typeMap = new Dictionary<string, Type>();
             foreach (var type in jobTypeList)
             {
                 JobAttribute jobAttribute = type.GetCustomAttribute<JobAttribute>(false);
                 _typeMap.Add(jobAttribute.CommandName, type);
-                //获取操作类说明
-                string counterString = $"[{counter}]";
-                //添加操作命令说明列表
-                var commandDescription = $"[{counter}]\t|\t{jobAttribute.CommandName.PadRight(16)}|\t{jobAttribute.Description}";
-                _commandList.Add(commandDescription);
-                counter++;
+                _commandInfoList.Add(jobAttribute.CommandName, jobAttribute.Description);
             }
-            string tempCommand = "\t|\thelp\t\t|\t打印操作指令";
-            _commandList.Add(tempCommand);
-            tempCommand = "\t|\texit\t\t|\t退出终端循环";
-            _commandList.Add(tempCommand);
+            _commandInfoList.Add("help", "Show operation command.");
+            _commandInfoList.Add("exit", "Exit terminal loop.");
 
-            this.JobTypeMap = _typeMap;
-            this.CommandList = _commandList;
+            JobTypeMap = _typeMap;
+            CommandInfoList = _commandInfoList;
         }
 
         /// <summary>
